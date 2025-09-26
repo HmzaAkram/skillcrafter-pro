@@ -46,8 +46,9 @@ class ResendTransport extends AbstractTransport
         ]);
 
         if ($response->failed()) {
-            throw new \Exception('Resend API error: ' . $response->body());
-        }
+    \Log::error('Resend API error: ' . $response->body());
+    throw new \Exception('Unable to send email. Please try again later.');
+}
     }
 
     public function __toString(): string

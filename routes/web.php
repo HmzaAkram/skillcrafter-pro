@@ -120,3 +120,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
 });
 Route::post('/chatbot/handle', [ChatbotController::class, 'handleMessage'])->name('chatbot.handle');
 Route::delete('/chatbot/clear', [ChatbotController::class, 'clearHistory'])->name('chatbot.clear');
+
+// In routes/web.php or routes/api.php
+Route::post('/email/resend', [VerificationController::class, 'resend'])->middleware('throttle:10,1');
