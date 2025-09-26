@@ -2,10 +2,9 @@
 
 namespace App\Mail\Transport;
 
-use Symfony\Component\Mailer\Transport\AbstractTransport;
-use Symfony\Component\Mailer\Envelope;
-use Symfony\Component\Mime\RawMessage;
 use Illuminate\Support\Facades\Http;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\AbstractTransport;
 
 class ResendTransport extends AbstractTransport
 {
@@ -16,10 +15,12 @@ class ResendTransport extends AbstractTransport
         $this->apiKey = $apiKey;
     }
 
-    protected function doSend(RawMessage $message, Envelope $envelope = null): void
+    protected function doSend(SentMessage $message): void
     {
-        $to = collect($envelope->getRecipients())
-            ->map(fn($r) => $r->toString())
+        $original = $message->getOriginalMessage();
+
+        $to = collect($original->getTo())
+            ->map(fn($r) => $r->getAddress())
             ->implode(',');
 
         Http::withHeaders([
@@ -28,8 +29,8 @@ class ResendTransport extends AbstractTransport
         ])->post('https://api.resend.com/emails', [
             'from'    => config('mail.from.address'),
             'to'      => $to,
-            'subject' => $message->getSubject(),
-            'html'    => $message->toString(),
+            'subject' => $original->getSubject(),
+            'html'    => $original->getHtmlBody() ?? $original->toString(),
         ]);
     }
 
