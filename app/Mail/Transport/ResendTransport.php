@@ -12,6 +12,7 @@ class ResendTransport extends AbstractTransport
 
     public function __construct(string $apiKey)
     {
+        parent::__construct(); // Initialize parent properties (fixes dispatcher error)
         $this->apiKey = $apiKey;
     }
 
@@ -23,15 +24,30 @@ class ResendTransport extends AbstractTransport
             ->map(fn($r) => $r->getAddress())
             ->implode(',');
 
-        Http::withHeaders([
+        // Extract from properly
+        $fromAddresses = $original->getFrom();
+        $from = null;
+        if ($fromAddresses && count($fromAddresses) > 0) {
+            $address = $fromAddresses[0]; // Assume single from
+            $name = $address->getName() ? $address->getName() . ' ' : '';
+            $from = $name . '<' . $address->getAddress() . '>';
+        } else {
+            $from = config('mail.from.address');
+        }
+
+        $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type'  => 'application/json',
         ])->post('https://api.resend.com/emails', [
-            'from'    => config('mail.from.address'),
+            'from'    => $from,
             'to'      => $to,
             'subject' => $original->getSubject(),
-            'html'    => $original->getHtmlBody() ?? $original->toString(),
+            'html'    => $original->getHtmlBody() ?? $original->getTextBody() ?? $original->toString(),
         ]);
+
+        if ($response->failed()) {
+            throw new \Exception('Resend API error: ' . $response->body());
+        }
     }
 
     public function __toString(): string

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Mail\Transport\ResendTransport;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\MailManager;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,8 +18,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Mail::extend('resend', function () {
-        return new ResendTransport(env('RESEND_API_KEY'));
+      $this->app->make(MailManager::class)->extend('resend', function () {
+        return new ResendTransport(config('services.resend.key'));
     });
         if ($this->app->environment('production')) {
             URL::forceScheme('https');   // Force HTTPS scheme
