@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Providers;
+
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Paginator::useBootstrap(); // ✅ Enable Bootstrap pagination styling
+        // Production me hamesha https force karo
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
+        // Bootstrap pagination enable karo
+        Paginator::useBootstrap();
     }
 }
